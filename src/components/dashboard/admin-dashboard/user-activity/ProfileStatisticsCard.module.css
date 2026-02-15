@@ -1,0 +1,40 @@
+.dropdownContainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.dropdown {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dropdown:focus {
+  border-color: #66b3ff;
+  box-shadow: 0 0 5px rgba(102, 179, 255, 0.5);
+}
+
+.dropdown option {
+  padding: 10px;
+}
+
+/* .statisticsContainer {
+  display: grid;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+} */
