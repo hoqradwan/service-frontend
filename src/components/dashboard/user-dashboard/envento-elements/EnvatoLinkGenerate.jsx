@@ -129,54 +129,77 @@ const EnvatoLinkGenerate = ({ dailyDownloadLimit, dailyDownload }) => {
   //   }
   // };
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-wrap sm:flex-nowrap items-start gap-4 justify-between mt-5"
-    >
-      <div className="w-full">
-        <input
-          id="helper-text"
-          aria-describedby="helper-text-explanation"
-          className="bg-gray-50 border w-full border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          placeholder="Enter your Envato Element Content url"
-          type="text"
-          {...register("url", { required: true })}
-        />
-        {errors.url && (
-          <span className="text-red-500 text-xs">this field is required</span>
-        )}
-      </div>
-      <button
-        type="submit"
-        disabled={buttonLoading}
-        className="flex gap-1 w-fit flex-nowrap text-nowrap items-center focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-      >
-        {buttonLoading ? (
-          <RotatingLines
-            visible={true}
-            height="16"
-            width="16"
-            color="#ffffff"
-            strokeWidth="5"
-            animationDuration="0.75"
-            ariaLabel="rotating-lines-loading"
-            wrapperStyle={{}}
-            wrapperClass=""
-          />
-        ) : (
-          <FaCheck />
-        )}
-        Generate Download Link
-      </button>
-      {/* modal for confirming download */}
-      <DownloadConfirmationModal
-        isOpen={isOpen}
-        onOpen={onOpen}
-        onOpenChange={onOpenChange}
-        onClose={onClose}
-        downloadInfo={downloadInfo}
-      />
-    </form>
+    // <form
+    //   onSubmit={handleSubmit(onSubmit)}
+    //   className="flex flex-wrap sm:flex-nowrap items-start gap-4 justify-between mt-5"
+    // >
+    //   <div className="w-full">
+    //     <input
+    //       id="helper-text"
+    //       aria-describedby="helper-text-explanation"
+    //       className="bg-gray-50 border w-full border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    //       placeholder="Enter your Envato Element Content url"
+    //       type="text"
+    //       {...register("url", { required: true })}
+    //     />
+    //     {errors.url && (
+    //       <span className="text-red-500 text-xs">this field is required</span>
+    //     )}
+    //   </div>
+    //   <button
+    //     type="submit"
+    //     disabled={buttonLoading}
+    //     className="flex gap-1 w-fit flex-nowrap text-nowrap items-center focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+    //   >
+    //     {buttonLoading ? (
+    //       <RotatingLines
+    //         visible={true}
+    //         height="16"
+    //         width="16"
+    //         color="#ffffff"
+    //         strokeWidth="5"
+    //         animationDuration="0.75"
+    //         ariaLabel="rotating-lines-loading"
+    //         wrapperStyle={{}}
+    //         wrapperClass=""
+    //       />
+    //     ) : (
+    //       <FaCheck />
+    //     )}
+    //     Generate Download Link
+    //   </button>
+    //   {/* modal for confirming download */}
+    //   <DownloadConfirmationModal
+    //     isOpen={isOpen}
+    //     onOpen={onOpen}
+    //     onOpenChange={onOpenChange}
+    //     onClose={onClose}
+    //     downloadInfo={downloadInfo}
+    //   />
+    // </form>
+ <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+  <div className="flex items-start gap-3">
+    <div className="text-amber-600 text-xl">
+      ⚠️
+    </div>
+
+    <div>
+      <h3 className="font-semibold text-amber-800 mb-2">
+        এনভাটো এলিমেন্টস সার্ভার আপডেট নোটিশ
+      </h3>
+
+      <p className="text-amber-700 leading-relaxed">
+        এনভাটো এলিমেন্টস সার্ভার আপডেট এসেছে বড় ধরনের। আমরা দ্রুত সমাধানের জন্য কাজ করছি।
+        অনুগ্রহপূর্বক সময় দিয়ে সহযোগিতা করবেন। বর্তমানে কারো এক্সেসই কাজ করছে না।
+        অনাকাঙ্ক্ষিত পরিস্থিতির জন্য আন্তরিকভাবে দুঃখিত।
+      </p>
+
+      <p className="mt-3 text-amber-800 font-medium">
+        বিঃ দ্রঃ সাময়িক এই অসুবিধা সমাধান হলেই আপনার প্যাকেজ মেয়াদ বৃদ্ধি করে দেওয়া হবে।
+      </p>
+    </div>
+  </div>
+</div>
   );
 };
 
