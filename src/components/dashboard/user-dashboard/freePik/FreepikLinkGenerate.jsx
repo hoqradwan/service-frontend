@@ -72,8 +72,9 @@ const FreepikLinkGenerate = ({ dailyDownloadLimit, dailyDownload }) => {
 
   const downloadRequest = async (data) => {
     setButtonLoading(true);
+
     try {
-      const generateLinkResponse = await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/download/freepik`,
         {
           method: "POST",
@@ -82,29 +83,73 @@ const FreepikLinkGenerate = ({ dailyDownloadLimit, dailyDownload }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(data),
-        }
+        },
       );
-      const result = await generateLinkResponse?.json();
 
-      if (!generateLinkResponse?.ok) {
+      // AUDIO DOWNLOAD
+      console.log(data);
+      const url = data?.url;
+      const itemList = url?.trim()?.split("/");
+      const content = itemList[3];
+      if (content === "audio") {
+        if (!response.ok) {
+          const error = await response.json();
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: error?.message || "Audio download failed",
+          });
+          return;
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        const audioName = itemList[itemList.length - 1];
+        link.download = `freepik-${audioName}.mp3`;
+
+        document.body.appendChild(link);
+        link.click();
+
+        link.remove();
+        window.URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: "success",
+          title: "Download started",
+        });
+
+        return;
+      }
+
+      // NORMAL FREEPIK DOWNLOAD (images/videos)
+      const result = await response.json();
+
+      if (!response.ok) {
         Swal.fire({
           icon: "error",
           title: "Oops...",
           text: result?.message || "Failed! Wrong URL",
         });
-      } else {
-        const { downloadUrl, downloadId } = result?.data || {};
-
-        setDownloadInfo({
-          downloadUrl,
-          downloadId,
-          status: "accepted",
-        });
-        reset();
-        onOpen();
+        return;
       }
+
+      const { downloadUrl, downloadId } = result?.data || {};
+
+      setDownloadInfo({
+        downloadUrl,
+        downloadId,
+        status: "accepted",
+      });
+
+      reset();
+      onOpen();
     } catch (error) {
       console.error("Error:", error);
+
       Swal.fire({
         icon: "error",
         title: "Something went wrong!",
