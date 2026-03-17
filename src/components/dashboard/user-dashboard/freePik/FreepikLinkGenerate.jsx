@@ -121,6 +121,7 @@ const FreepikLinkGenerate = ({ dailyDownloadLimit, dailyDownload }) => {
           icon: "success",
           title: "Download started",
         });
+        reset();
 
         return;
       }
