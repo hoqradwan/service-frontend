@@ -62,6 +62,17 @@ const FreepikLinkGenerate = ({ dailyDownloadLimit, dailyDownload }) => {
 
       setTypeOptions(videoOptions);
       setOpenTypesModal(!openTypesModal);
+    } else if (content === "3d-model") {
+      setContentUrl(url);
+      const model3dOptions = [
+        { label: "BLEND", value: "blend" },
+        { label: "OBJ", value: "obj" },
+        { label: "FBX", value: "fbx" },
+        { label: "TEXTURES", value: "textures" },
+      ];
+
+      setTypeOptions(model3dOptions);
+      setOpenTypesModal(!openTypesModal);
     } else {
       const sendData = {
         url: data?.url,
