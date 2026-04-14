@@ -30,7 +30,6 @@ export default function DownloadConfirmationModal({
   const token = Cookies.get("session");
 
   const downloadFile = async () => {
-    // this api adds the download information received from envato to digital tools database
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/download/${downloadId}`,
@@ -41,20 +40,18 @@ export default function DownloadConfirmationModal({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(data),
-        }
+        },
       );
+
       const result = await response.json();
+
       if (result?.success) {
-        // creates the <a> tag and downloads the file
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = "filename.ext";
-        document.body.appendChild(a);
-        // click the <a> tag
-        a.click();
-        // remove the <a> tag
-        a.remove();
-        // closes the modal
+        // Option A: Use window.open with specific features to "clean" the request
+        window.open(downloadUrl, "_blank", "noopener,noreferrer");
+
+        // OR Option B: If window.open is blocked by popup blockers
+        // window.location.assign(downloadUrl);
+
         setRefetch((prev) => prev + 1);
         onClose();
       } else {
@@ -66,7 +63,6 @@ export default function DownloadConfirmationModal({
   };
 
   const cancelDownload = () => {
-  
     onClose();
   };
 
