@@ -1,74 +1,82 @@
 "use client";
+
 import React, { useCallback, useEffect, useState } from "react";
 import LicenseTable from "./LicenseTable";
 import { GET_DATA_URL_TOKEN } from "@/utility/get_data";
 import Cookies from "js-cookie";
 import AddLicenseModal from "@/components/Shared/create-license/AddLicenseModal";
-import getUniqueData from "@/utility/get_unique_data";
 
 const LicenseListTableMain = () => {
-  const [allData, setAllData] = useState([]); // State for storing all license data
-  const [loading, setLoading] = useState(false); // State for loading status
-  const [error, setError] = useState(null); // State for error handling
-  const [page, setPage] = useState(1); // State for current page
-  const [loadedPages, setLoadedPages] = useState([]); // Track which pages are loaded
-  const limit = 10; // Set the limit for each request
-  const token = Cookies.get("session"); // Get the session token
+  const [licenses, setLicenses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalLicense, setTotalLicense] = useState(0);
+
+  const [search, setSearch] = useState("");
+  const [service, setService] = useState("All");
+
+  // ✅ FIX: limit must be state
+  const [limit, setLimit] = useState(10);
+
+  const token = Cookies.get("session");
 
   const fetchLicenses = useCallback(async () => {
-    if (loadedPages.includes(page)) return; // Don't refetch the data if already loaded
-
-    setLoading(true);
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/license?limit=${limit}&page=${page}`;
     try {
+      setLoading(true);
+
+      let url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/license?page=${page}&limit=${limit}`;
+
+      if (search) url += `&search=${search}`;
+      if (service && service !== "All") url += `&serviceName=${service}`;
+
       const response = await GET_DATA_URL_TOKEN(url, token);
-      const data = response?.data?.data;
 
-      if (allData.length === 0) {
-        setAllData(data);
-        setLoading(false);
-        setError(null);
-        return;
-      }
+      const result = response?.data;
 
-      setAllData((prevData) => [...prevData, ...data]); // Concatenate new data
-      // Mark the page as loaded
-      setLoadedPages((prevPages) => [...prevPages, page]);
-
-      setLoading(false);
-      setError(null);
+      setLicenses(result?.data || []);
+      setTotalPages(result?.meta?.totalPages || 1);
+      setTotalLicense(result?.meta?.total || 0);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching licenses:", error);
+    } finally {
       setLoading(false);
-      setError("Error fetching data");
     }
-  }, [loadedPages, page, limit, token, allData]);
+  }, [page, limit, token, search, service]); // ✅ FIXED dependency
 
   useEffect(() => {
-    fetchLicenses(); // Fetch data whenever page changes
-  }, [page, fetchLicenses]);
+    fetchLicenses();
+  }, [fetchLicenses]);
 
-  //unique data
-  const uniqueData = getUniqueData(allData);
-  // console.log(uniqueData, "unique licen");
   return (
     <div>
       <div className="shadow-xl bg-white p-3 m-2">
-        {/* License list title and description */}
-        <div className="mb-7">
+        <div className="mb-7 flex justify-between items-center">
           <div>
             <h4 className="text-gray-500">License List</h4>
             <span className="text-gray-400 text-[14px] inline-block">
-              All Licenses
+              Total Licenses - {totalLicense}
             </span>
           </div>
+
           <div className="sm:hidden mt-4 sm:mt-0">
             <AddLicenseModal />
           </div>
         </div>
 
-        {/* Table component to display the fetched license data */}
-        <LicenseTable licenseData={uniqueData} page={page} setPage={setPage} />
+        <LicenseTable
+          licenseData={licenses}
+          loading={loading}
+          page={page}
+          setPage={setPage}
+          totalPages={totalPages}
+          setSearch={setSearch}
+          setService={setService}
+          // ✅ FIX: pass limit control
+          limit={limit}
+          setLimit={setLimit}
+        />
       </div>
     </div>
   );
