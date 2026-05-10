@@ -60,7 +60,6 @@ export default function LicenseTable({
   setLimit,
 }) {
   const [filterValue, setFilterValue] = useState("");
-
   const [selectedKeys, setSelectedKeys] = useState(new Set([]));
   const [visibleColumns] = useState(new Set(INITIAL_VISIBLE_COLUMNS));
 
@@ -69,11 +68,9 @@ export default function LicenseTable({
     direction: "ascending",
   });
 
-  // ✅ DEFAULT VALUE FIXED
   const [selectedService, setSelectedService] = useState("All");
 
   const services = ["All", "Envato", "Story-blocks", "Freepik"];
-
   const token = Cookies.get("session");
 
   // ---------------------------
@@ -121,40 +118,52 @@ export default function LicenseTable({
   }, [licenseData, sortDescriptor]);
 
   // ---------------------------
-  // CELL RENDER
+  // STABLE ITEMS (IMPORTANT FIX)
+  // ---------------------------
+  const displayedItems = useMemo(() => {
+    return sortedItems;
+  }, [sortedItems]);
+
+  // ---------------------------
+  // CELL RENDER (FIXED INDEX ISSUE)
   // ---------------------------
   const renderCell = useCallback(
-    (user, columnKey, index) => {
-      const cellValue = user[columnKey];
+    (item, columnKey, index) => {
+      const cellValue = item[columnKey];
 
       switch (columnKey) {
-        case "serial":
-          const serial = (page - 1) * limit + index + 1;
+        case "serial": {
+          const safeLimit = Number(limit) || 10;
+          const safePage = Number(page) || 1;
+
+          const serial = (safePage - 1) * safeLimit + index + 1;
+
           return <p>{serial}</p>;
+        }
 
         case "serviceName":
-          return <p>{user.serviceName}</p>;
+          return <p>{item.serviceName}</p>;
 
         case "dayLimit":
-          return <p>{user.dayLimit}</p>;
+          return <p>{item.dayLimit}</p>;
 
         case "dailyLimit":
-          return <p>{user.dailyLimit}</p>;
+          return <p>{item.dailyLimit}</p>;
 
         case "totalLimit":
-          return <p>{user.totalLimit}</p>;
+          return <p>{item.totalLimit}</p>;
 
         case "deviceLimit":
-          return <p>{user?.deviceLimit || 1}</p>;
+          return <p>{item?.deviceLimit || 1}</p>;
 
         case "licenseKey":
           return (
             <div className="flex flex-col py-1">
-              <p>{user.licenseKey}</p>
+              <p>{item.licenseKey}</p>
               <p className="text-[11px]">
-                <span className="block">{user.userEmail}</span>
-                {user?.status === "used" && (
-                  <span>Expiry: {formatTime(user?.expiryDate)}</span>
+                <span className="block">{item.userEmail}</span>
+                {item?.status === "used" && (
+                  <span>Expiry: {formatTime(item?.expiryDate)}</span>
                 )}
               </p>
             </div>
@@ -164,7 +173,7 @@ export default function LicenseTable({
           return (
             <Chip
               className="capitalize"
-              color={statusColorMap[user.status]}
+              color={statusColorMap[item.status]}
               size="sm"
               variant="dot"
             >
@@ -177,16 +186,16 @@ export default function LicenseTable({
             <div className="flex items-center gap-2">
               <Tooltip content="Delete">
                 <span
-                  onClick={() => handleDelete(user?._id)}
+                  onClick={() => handleDelete(item?._id)}
                   className="cursor-pointer text-danger"
                 >
                   <DeleteIcon />
                 </span>
               </Tooltip>
 
-              {user.status !== "new" && (
+              {item.status !== "new" && (
                 <Tooltip content="View User">
-                  <Link href={`/dashboard/admin/user-activity/${user.user}`}>
+                  <Link href={`/dashboard/admin/user-activity/${item.user}`}>
                     <BurgerMenu />
                   </Link>
                 </Tooltip>
@@ -195,15 +204,15 @@ export default function LicenseTable({
               <Tooltip content="Copy">
                 <span
                   className="cursor-pointer"
-                  onClick={() => COPY_TEXT(user.serviceName, user.licenseKey)}
+                  onClick={() => COPY_TEXT(item.serviceName, item.licenseKey)}
                 >
                   <CopyIcon />
                 </span>
               </Tooltip>
 
-              {user.status !== "expired" && (
+              {item.status !== "expired" && (
                 <Tooltip content="Edit">
-                  <Link href={`/dashboard/admin/update-license/${user._id}`}>
+                  <Link href={`/dashboard/admin/update-license/${item._id}`}>
                     <EditOutline />
                   </Link>
                 </Tooltip>
@@ -243,17 +252,19 @@ export default function LicenseTable({
           onValueChange={(val) => {
             setFilterValue(val);
             setSearch(val);
+            setPage(1);
           }}
         />
 
-        {/* SERVICE SELECT (FIXED DEFAULT) */}
+        {/* SERVICE */}
         <Select
           className="max-w-xs"
-          selectedKeys={[selectedService]} // ✅ FIXED
+          selectedKeys={[selectedService]}
           onSelectionChange={(keys) => {
             const value = Array.from(keys)[0];
             setSelectedService(value);
             setService(value === "All" ? "" : value);
+            setPage(1);
           }}
         >
           {services.map((service) => (
@@ -261,10 +272,10 @@ export default function LicenseTable({
           ))}
         </Select>
 
-        {/* LIMIT SELECT (FIXED DEFAULT) */}
+        {/* LIMIT */}
         <Select
           className="max-w-[100px]"
-          selectedKeys={[String(limit)]} // ✅ FIXED
+          selectedKeys={[String(limit)]}
           onSelectionChange={(keys) => {
             const value = Number(Array.from(keys)[0]);
             setLimit(value);
@@ -295,20 +306,18 @@ export default function LicenseTable({
         </TableHeader>
 
         <TableBody
-          items={sortedItems}
+          items={displayedItems}
           isLoading={loading}
           loadingContent={<Spinner />}
           emptyContent={"No licenses found"}
         >
-          {(item) => (
+          {displayedItems.map((item, index) => (
             <TableRow key={item._id}>
               {(columnKey) => (
-                <TableCell>
-                  {renderCell(item, columnKey, sortedItems.indexOf(item))}
-                </TableCell>
+                <TableCell>{renderCell(item, columnKey, index)}</TableCell>
               )}
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
 

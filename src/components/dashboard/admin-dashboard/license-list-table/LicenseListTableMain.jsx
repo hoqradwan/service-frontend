@@ -17,7 +17,6 @@ const LicenseListTableMain = () => {
   const [search, setSearch] = useState("");
   const [service, setService] = useState("All");
 
-  // ✅ FIX: limit must be state
   const [limit, setLimit] = useState(10);
 
   const token = Cookies.get("session");
@@ -32,7 +31,6 @@ const LicenseListTableMain = () => {
       if (service && service !== "All") url += `&serviceName=${service}`;
 
       const response = await GET_DATA_URL_TOKEN(url, token);
-
       const result = response?.data;
 
       setLicenses(result?.data || []);
@@ -43,7 +41,7 @@ const LicenseListTableMain = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, token, search, service]); // ✅ FIXED dependency
+  }, [page, limit, search, service, token]);
 
   useEffect(() => {
     fetchLicenses();
@@ -73,7 +71,6 @@ const LicenseListTableMain = () => {
           totalPages={totalPages}
           setSearch={setSearch}
           setService={setService}
-          // ✅ FIX: pass limit control
           limit={limit}
           setLimit={setLimit}
         />
