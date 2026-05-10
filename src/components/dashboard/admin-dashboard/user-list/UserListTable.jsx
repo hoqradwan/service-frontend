@@ -25,6 +25,8 @@ import generatePasswordModal from "@/utility/generatePasswordModal";
 import * as XLSX from "xlsx";
 import GET_ALL_PAGINATION_USER_DATA from "@/utility/get_whole_pagination_user_data";
 import { filterUserData } from "@/utility/filter_user_data";
+import { RotatingLines } from "react-loader-spinner";
+import toast from "react-hot-toast";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "serial",
@@ -38,10 +40,11 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 export default function UserListTable({ users, page, setPage }) {
+  const [isDownloading, setIsDownloading] = useState(false);
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_VISIBLE_COLUMNS),
   );
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -75,24 +78,59 @@ export default function UserListTable({ users, page, setPage }) {
    * generate password by admin
    */
   //download excel sheet
-  // const downloadExcel = useCallback(() => {
-  //   const worksheet = XLSX.utils.json_to_sheet(users);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
-  //   XLSX.writeFile(workbook, "users.xlsx");
-  // }, [users]);
-  const downloadExcel = useCallback(() => {
-    const filteredUsers = users.map((user) => ({
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-    }));
 
-    const worksheet = XLSX.utils.json_to_sheet(filteredUsers);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
-    XLSX.writeFile(workbook, "users.xlsx");
-  }, [users]);
+  const downloadExcel = async () => {
+    try {
+      setIsDownloading(true);
+
+      toast.loading("Preparing Excel file...", {
+        id: "downloadExcel",
+      });
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/export`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download file");
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "users.xlsx";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Excel file downloaded successfully!", {
+        id: "downloadExcel",
+      });
+    } catch (error) {
+      console.error(error);
+
+      toast.error(error?.message || "Failed to download Excel file", {
+        id: "downloadExcel",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const generatePassword = useCallback(
     async (id) => {
@@ -111,7 +149,7 @@ export default function UserListTable({ users, page, setPage }) {
         setLoading(false); // Optional: Set loading to false after the request finishes
       }
     },
-    [token, setLoading] // Dependencies array
+    [token, setLoading], // Dependencies array
   );
   useEffect(() => {
     setData(users);
@@ -120,7 +158,7 @@ export default function UserListTable({ users, page, setPage }) {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(visibleColumns).includes(column.uid),
     );
   }, [visibleColumns]);
 
@@ -136,7 +174,7 @@ export default function UserListTable({ users, page, setPage }) {
         (user) =>
           user?.name?.toLowerCase().includes(filterValue.toLowerCase()) ||
           user?.email?.toLowerCase().includes(filterValue.toLowerCase()) ||
-          user?.phone?.toString().includes(filterValue)
+          user?.phone?.toString().includes(filterValue),
       );
       console.log("Filtered by Search:", filteredUsers); // Check after search filtering
     }
@@ -145,7 +183,7 @@ export default function UserListTable({ users, page, setPage }) {
       Array.from(statusFilter).length !== statusOptions.length
     ) {
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
@@ -258,7 +296,7 @@ export default function UserListTable({ users, page, setPage }) {
           return cellValue;
       }
     },
-    [generatePassword]
+    [generatePassword],
   );
 
   const onRowsPerPageChange = React.useCallback(
@@ -266,7 +304,7 @@ export default function UserListTable({ users, page, setPage }) {
       setRowsPerPage(Number(e.target.value));
       setPage(1);
     },
-    [setPage]
+    [setPage],
   );
 
   const onSearchChange = React.useCallback(
@@ -278,7 +316,7 @@ export default function UserListTable({ users, page, setPage }) {
         setFilterValue("");
       }
     },
-    [setPage]
+    [setPage],
   );
 
   const topContent = React.useMemo(() => {
@@ -358,13 +396,28 @@ export default function UserListTable({ users, page, setPage }) {
         "group-data-[last=true]:last:before:rounded-none",
       ],
     }),
-    []
+    [],
   );
 
   return (
     <div className="overflow-x-auto overflow-y-hidden">
-      <Button onClick={downloadExcel} color="primary">
-        Download Excel sheet
+      <Button onClick={downloadExcel} disabled={isDownloading} color="primary">
+        {isDownloading ? (
+          <>
+            <RotatingLines
+              visible={true}
+              height="20"
+              width="20"
+              strokeColor="white"
+              strokeWidth="5"
+              animationDuration="0.75"
+              ariaLabel="rotating-lines-loading"
+            />
+            Downloading...
+          </>
+        ) : (
+          "Download Excel sheet"
+        )}
       </Button>
       <Table
         className="w-full mt-5"
