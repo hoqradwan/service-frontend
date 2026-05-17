@@ -20,6 +20,7 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import ServiceActivationModal from "../service-activation/serviceActivationModal";
+import { GrCircleAlert } from "react-icons/gr";
 
 const Sidebar = () => {
   const [supportData, setSupportData] = useState([]);
@@ -115,6 +116,11 @@ const Sidebar = () => {
       link: "/dashboard/admin/support",
       icon: BiSupport,
     },
+    {
+      name: "Notice",
+      link: "/dashboard/admin/notice",
+      icon: GrCircleAlert,
+    },
   ];
 
   useEffect(() => {
@@ -128,7 +134,7 @@ const Sidebar = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         const result = await response.json();
         const data = result?.data;

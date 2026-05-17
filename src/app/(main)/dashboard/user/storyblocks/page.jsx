@@ -3,16 +3,20 @@ import React, { useContext, useEffect, useState } from "react";
 import TopHeader2 from "@/components/Shared/TopHeader/TopHeader2";
 import { FaVideo } from "react-icons/fa6";
 import Link from "next/link";
+
 import ServiceStatus from "@/components/dashboard/user-dashboard/story-blocks/ServiceStatus";
 import UserGuide from "@/components/dashboard/user-dashboard/motionArray/UserGuide";
+
 import {
   fetchDailyDownloadData,
   fetchLicenseData,
   fetchServiceStatusData,
   fetchTotalDownloadData,
 } from "@/utility/story_blocks_data_fetch.js";
+
 import Loader from "@/components/Shared/loader/Loader";
 import { RefetchContext } from "@/Provider/RefetchContext";
+
 import StoryBlocksCards from "@/components/dashboard/user-dashboard/storyBlocks/StoryBlocksCards";
 import StoryBlockLinkGenerate from "@/components/dashboard/user-dashboard/story-blocks/StoryBlockLinkGenerate";
 import { deviceLimitForService } from "@/utility/get_device_limit";
@@ -22,32 +26,65 @@ const StoryBlocks = () => {
   const { refetch } = useContext(RefetchContext);
 
   const [loading, setLoading] = useState(true);
+
   const [expiryDate, setExpiryDate] = useState("");
   const [dailyDownloadLimit, setDailyDownloadLimit] = useState(0);
   const [totalDownloadLimit, setTotalDownloadLimit] = useState(0);
   const [dailyDownload, setDailyDownload] = useState(0);
   const [totalDownload, setTotalDownload] = useState(0);
+
   const [serviceStatus, setServiceStatus] = useState(false);
   const [deviceLimitExceeded, setDeviceLimitExceeded] = useState(false);
 
+  // ---------------------------
+  // NOTICE STATE
+  // ---------------------------
+  const [noticeMessage, setNoticeMessage] = useState("");
+  const [noticeActive, setNoticeActive] = useState(false);
+
+  // ---------------------------
+  // FETCH NOTICE
+  // ---------------------------
+  const fetchNotice = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/notice/active/story-blocks`,
+      );
+
+      const data = await res.json();
+
+      if (data?.data) {
+        setNoticeMessage(data.data.message);
+        setNoticeActive(data.data.active);
+      } else {
+        setNoticeMessage("");
+        setNoticeActive(false);
+      }
+    } catch (error) {
+      console.error("StoryBlocks notice fetch error:", error);
+    }
+  };
+
+  // ---------------------------
+  // FETCH ALL DATA
+  // ---------------------------
   const fetchAllData = async () => {
     try {
-      // Execute all fetches concurrently
       await Promise.all([
         fetchServiceStatusData(setServiceStatus),
         fetchLicenseData(
           setExpiryDate,
           setTotalDownloadLimit,
-          setDailyDownloadLimit
+          setDailyDownloadLimit,
         ),
         fetchDailyDownloadData(setDailyDownload),
         fetchTotalDownloadData(setTotalDownload),
         deviceLimitForService("story-blocks", setDeviceLimitExceeded),
+        fetchNotice(),
       ]);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
-      // Ensure loading is set to false after all promises resolve
       setLoading(false);
     }
   };
@@ -85,58 +122,74 @@ const StoryBlocks = () => {
 
   return (
     <div key={serviceStatus ? refetch : null} className="min-h-screen">
-      {/* top header that contains breadcrumb */}
       <TopHeader2 />
+
       {loading ? (
         <Loader />
       ) : (
         <div className="bg-white p-8">
+          {/* HEADER */}
           <div className="mb-8 w-full flex items-center justify-between">
             <ServiceStatus
               serviceStatus={serviceStatus}
               setServiceStatus={setServiceStatus}
             />
-            {/* Watch the promo video */}
+
             <Link
               href="https://youtu.be/1XWKWy21ius?si=XprMhGK4qK5T08qK"
               target="_blank"
-              className="flex items-center focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5"
+              className="flex items-center text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5"
             >
               <FaVideo className="mr-2" />
               Watch Promo Video
             </Link>
           </div>
+
+          {/* SERVICE ACTIVE */}
           {serviceStatus ? (
             <>
-              {/* Show the cards */}
+              {/* CARDS */}
               <div className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-5">
                 {cardsData.map((card) => (
-                  <StoryBlocksCards
-                    key={card.id}
-                    card={card}
-                  ></StoryBlocksCards>
+                  <StoryBlocksCards key={card.id} card={card} />
                 ))}
               </div>
+
               {!deviceLimitExceeded ? (
                 <>
-                  <div className="">
+                  {/* NOTICE */}
+                  {noticeActive && noticeMessage ? (
                     <p className="bg-lime-200 p-4 rounded-md">
-                      <span className="text-red-600 block">ATTENTION </span>
-                      Download links are valid for 1 minute. If you click the
-                      link after 1 minute, it will not work. After downloading
-                      your content from here, you can download the license
-                      through the download history on the Dashboard tab.
+                      <span className="text-red-600 block font-bold">
+                        ATTENTION
+                      </span>
+                      {noticeMessage}
                     </p>
-                    <p className="bg-zinc-300 p-4 rounded-md mt-4">
-                      Make sure the link you entered goes to the Story-blocks
-                      content page.
-                    </p>
-                  </div>
-                  {/* Generate download link */}
-                  <StoryBlockLinkGenerate
-                    dailyDownloadLimit={dailyDownloadLimit}
-                    dailyDownload={dailyDownload}
-                  />
+                  ) : (
+                    <>
+                      <div className="">
+                        <p className="bg-lime-200 p-4 rounded-md">
+                          <span className="text-red-600 block">ATTENTION</span>
+                          Download links are valid for 1 minute. If you click
+                          the link after 1 minute, it will not work. After
+                          downloading your content from here, you can download
+                          the license through the download history on the
+                          Dashboard tab.
+                        </p>
+
+                        <p className="bg-zinc-300 p-4 rounded-md mt-4">
+                          Make sure the link you entered goes to the
+                          Story-blocks content page.
+                        </p>
+                      </div>
+
+                      {/* LINK GENERATE */}
+                      <StoryBlockLinkGenerate
+                        dailyDownloadLimit={dailyDownloadLimit}
+                        dailyDownload={dailyDownload}
+                      />
+                    </>
+                  )}
                 </>
               ) : (
                 <DeviceLimitExceeded />
